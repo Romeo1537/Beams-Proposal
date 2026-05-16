@@ -1,0 +1,2257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Romeo Lam - Operations Associate, Beams</title>
+<style>
+  /* ============================================
+     SHARED VARIABLES
+     ============================================ */
+  :root {
+    --gold: #ffb20b;
+    --gold-hover: #ffc055;
+    --gold-light: rgba(255, 178, 11, 0.1);
+    --gold-border: rgba(255, 178, 11, 0.3);
+    --dark: #0f0519;
+    --muted-fg: #3e3746;
+    --grey: #86828b;
+    --white: #ffffff;
+    --muted-bg: #f3f3f3;
+    --secondary: #e0dfde;
+    --cream: #e8e3df;
+    --cream-light: #f9f6f5;
+    --accent: #f9f6f5;
+    --border: #e6e6e6;
+    --green: #2d8a4e;
+    --green-light: rgba(45, 138, 78, 0.1);
+    --red: #c0392b;
+    --red-light: rgba(192, 57, 43, 0.08);
+    --blue: #2980b9;
+    --blue-light: rgba(41, 128, 185, 0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--dark);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    line-height: 1.5;
+  }
+
+  /* ============================================
+     LANDING PAGE (REACT SCENE DECK)
+     ============================================ */
+
+  .stage {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #060109;
+  }
+
+  .scene {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 1100ms cubic-bezier(0.5, 0, 0.2, 1);
+    pointer-events: none;
+  }
+  .scene.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .scene-img {
+    position: absolute;
+    inset: -8%;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    transform: scale(1.05);
+    transition: transform 1400ms cubic-bezier(0.5, 0, 0.2, 1), opacity 1100ms ease;
+  }
+  .scene.active .scene-img {
+    animation: kenburns 18s ease-in-out forwards;
+  }
+  @keyframes kenburns {
+    0%   { transform: scale(1.05) translate(0, 0); }
+    50%  { transform: scale(1.12) translate(-1.5%, -1%); }
+    100% { transform: scale(1.18) translate(-2.5%, -2%); }
+  }
+
+  .scene-scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, rgba(15,5,25,0.78) 0%, rgba(15,5,25,0.5) 28%, rgba(15,5,25,0.15) 50%, rgba(15,5,25,0) 65%),
+      linear-gradient(180deg, rgba(15,5,25,0.25) 0%, rgba(15,5,25,0) 30%, rgba(15,5,25,0) 70%, rgba(15,5,25,0.4) 100%);
+  }
+  .scene[data-final="true"] .scene-scrim {
+    background: linear-gradient(180deg, rgba(15,5,25,0.55), rgba(15,5,25,0.85));
+  }
+
+  .vignette {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 240px rgba(0,0,0,0.55);
+    z-index: 5;
+  }
+
+  .grain {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    z-index: 6;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.7'/></svg>");
+    animation: grainShift 1.2s steps(6) infinite;
+  }
+  @keyframes grainShift {
+    0%   { transform: translate(0, 0); }
+    25%  { transform: translate(-4%, 2%); }
+    50%  { transform: translate(3%, -3%); }
+    75%  { transform: translate(-2%, 1%); }
+    100% { transform: translate(0, 0); }
+  }
+
+  .scene-content {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    z-index: 10;
+    padding: 100px 64px 100px;
+  }
+  .scene-inner {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  .panel { max-width: 600px; }
+
+  .scene .reveal {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(6px);
+    transition:
+      opacity 800ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 800ms cubic-bezier(0.22, 1, 0.36, 1),
+      filter 800ms ease;
+  }
+  .scene.active .reveal { opacity: 1; transform: translateY(0); filter: blur(0); }
+  .scene.active .reveal-d1 { transition-delay: 200ms; }
+  .scene.active .reveal-d2 { transition-delay: 360ms; }
+  .scene.active .reveal-d3 { transition-delay: 520ms; }
+  .scene.active .reveal-d4 { transition-delay: 680ms; }
+  .scene.active .reveal-d5 { transition-delay: 840ms; }
+  .scene.active .reveal-d6 { transition-delay: 1000ms; }
+  .scene.active .reveal-d7 { transition-delay: 1160ms; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 178, 11, 0.16);
+    color: var(--gold);
+    border: 1px solid rgba(255, 178, 11, 0.45);
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    width: fit-content;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .pill .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 10px var(--gold);
+  }
+
+  .phase-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+  }
+  .phase-label .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 14px rgba(255,178,11,0.7);
+    animation: pulseDot 2.4s ease-in-out infinite;
+  }
+  @keyframes pulseDot {
+    0%, 100% { box-shadow: 0 0 12px rgba(255,178,11,0.5); }
+    50%      { box-shadow: 0 0 22px rgba(255,178,11,0.9); }
+  }
+
+  h1.hero-h, h2.scene-h {
+    font-size: clamp(46px, 5.6vw, 84px);
+    line-height: 1.0;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    color: #fff;
+    text-shadow: 0 2px 30px rgba(0,0,0,0.55);
+    margin-bottom: 24px;
+  }
+  h1.hero-h { margin: 26px 0 22px; }
+  h2.scene-h .accent { color: var(--gold); font-style: italic; font-weight: 500; }
+
+  .scene-sub, .panel-sub {
+    font-size: clamp(16px, 1.3vw, 19px);
+    line-height: 1.55;
+    color: rgba(255,255,255,0.82);
+    max-width: 520px;
+    margin-bottom: 32px;
+    text-shadow: 0 1px 18px rgba(0,0,0,0.5);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--gold);
+    color: var(--dark);
+    border: none;
+    padding: 14px 22px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+    width: fit-content;
+    box-shadow: 0 10px 36px rgba(255, 178, 11, 0.32);
+  }
+  .btn-primary:hover { background: var(--gold-hover); transform: translateY(-1px); box-shadow: 0 14px 44px rgba(255, 178, 11, 0.45); }
+  .btn-primary svg { transition: transform 180ms ease; }
+  .btn-primary:hover svg { transform: translateX(3px); }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: rgba(255,255,255,0.9);
+    border: 1px solid rgba(255,255,255,0.32);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 180ms ease;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .btn-outline:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(255, 178, 11, 0.08);
+  }
+
+  .bullets {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 30px;
+    list-style: none;
+  }
+  .bullet {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    font-size: 15px;
+    line-height: 1.55;
+    color: rgba(255,255,255,0.86);
+    text-shadow: 0 1px 14px rgba(0,0,0,0.4);
+  }
+  .bullet-icon {
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(255, 178, 11, 0.2);
+    border: 1.5px solid var(--gold);
+    margin-top: 4px;
+    position: relative;
+  }
+  .bullet-icon::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: var(--gold);
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    max-width: 460px;
+  }
+  .metric-card {
+    padding: 18px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(15,5,25,0.42);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .metric-value {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .metric-label {
+    font-size: 12.5px;
+    line-height: 1.4;
+    color: rgba(255,255,255,0.72);
+  }
+
+  .final-content {
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    padding: 100px 64px;
+  }
+  .final-inner { text-align: left; max-width: 1180px; width: 100%; }
+  h2.exp-h {
+    font-size: clamp(44px, 5vw, 68px);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    margin-bottom: 44px;
+    color: #fff;
+  }
+  h2.exp-h .accent { color: var(--gold); font-style: italic; font-weight: 500; }
+  .exp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 40px;
+  }
+  .exp-card {
+    background: rgba(15,5,25,0.5);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 240ms ease, border-color 240ms ease, background 240ms ease;
+  }
+  .exp-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 320ms ease;
+  }
+  .exp-card:hover { border-color: rgba(255,178,11,0.35); background: rgba(15,5,25,0.6); transform: translateY(-3px); }
+  .exp-card:hover::before { transform: scaleX(1); }
+  .exp-card-org { font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 10px; }
+  .exp-card-title { font-size: 18px; font-weight: 600; letter-spacing: -0.015em; margin-bottom: 12px; color: #fff; }
+  .exp-card-body { font-size: 13.5px; line-height: 1.6; color: rgba(255,255,255,0.74); }
+
+  .footer-block { border-top: 1px solid rgba(255,255,255,0.12); padding-top: 28px; display: flex; flex-direction: column; gap: 24px; }
+  .footer-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+  .footer-name { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; color: #fff; margin-bottom: 4px; }
+  .footer-role { font-size: 13px; color: var(--gold); }
+  .footer-buttons { display: flex; gap: 10px; }
+  .easter-egg {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 12.5px;
+    font-style: italic;
+    color: rgba(255,255,255,0.18);
+    transition: color 320ms ease, text-shadow 320ms ease;
+    cursor: default;
+  }
+  .easter-egg:hover { color: rgba(255,178,11,0.9); text-shadow: 0 0 18px rgba(255,178,11,0.5); }
+
+  .progress-rail {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.08);
+    z-index: 100;
+  }
+  .progress-fill {
+    position: absolute;
+    top: 0; left: 0; height: 100%;
+    background: var(--gold);
+    transition: width 700ms cubic-bezier(0.22,1,0.36,1);
+    box-shadow: 0 0 12px rgba(255,178,11,0.6);
+  }
+
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 90;
+    padding: 18px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+  }
+  .nav > * { pointer-events: auto; }
+  .nav-brand {
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+    color: #fff;
+    text-shadow: 0 1px 14px rgba(0,0,0,0.5);
+  }
+  .nav-brand .dot { color: var(--gold); }
+  .nav-link-co {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: rgba(255,255,255,0.6);
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 200ms ease;
+    text-shadow: 0 1px 12px rgba(0,0,0,0.5);
+  }
+  .nav-link-co:hover { color: var(--gold); }
+  .nav-counter {
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.7);
+    font-variant-numeric: tabular-nums;
+    text-transform: uppercase;
+    text-shadow: 0 1px 12px rgba(0,0,0,0.5);
+  }
+  .nav-counter .now { color: var(--gold); }
+
+  .scene-dots {
+    position: fixed;
+    right: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 80;
+  }
+  .scene-dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    position: relative;
+    transition: transform 200ms ease;
+  }
+  .scene-dot::after {
+    content: '';
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255,255,255,0.45);
+    transition: all 280ms ease;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.4);
+  }
+  .scene-dot.active::after {
+    background: var(--gold);
+    width: 22px; height: 22px;
+    box-shadow: 0 0 14px rgba(255,178,11,0.6);
+  }
+  .scene-dot:hover::after { background: var(--gold); }
+  .scene-dot-label {
+    position: absolute;
+    right: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.85);
+    background: rgba(15,5,25,0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.1);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+  .scene-dot:hover .scene-dot-label { opacity: 1; transform: translateY(-50%) translateX(-4px); }
+
+  .arrow {
+    position: fixed;
+    bottom: 38px;
+    z-index: 80;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: rgba(15,5,25,0.5);
+    border: 1px solid rgba(255,255,255,0.18);
+    color: rgba(255,255,255,0.85);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 200ms ease;
+  }
+  .arrow:hover:not(:disabled) {
+    color: var(--gold);
+    border-color: var(--gold);
+    background: rgba(255,178,11,0.1);
+    transform: scale(1.05);
+  }
+  .arrow:disabled { opacity: 0.3; cursor: not-allowed; }
+  .arrow.prev { left: 40px; }
+  .arrow.next { left: 100px; }
+
+  .hint {
+    position: fixed;
+    bottom: 50px;
+    right: 60px;
+    z-index: 70;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.55);
+    pointer-events: none;
+    text-shadow: 0 1px 10px rgba(0,0,0,0.5);
+  }
+  .hint .keys {
+    display: flex;
+    gap: 4px;
+  }
+  .hint .key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 4px;
+    color: rgba(255,255,255,0.8);
+    font-size: 11px;
+  }
+
+  .scene-img.enter-from-right { transform: scale(1.05) translate3d(8%, 0, 0); }
+  .scene-img.enter-from-left { transform: scale(1.05) translate3d(-8%, 0, 0); }
+
+  /* Footer link to change order in the landing page */
+  .footer-co-link {
+    font-size: 12px;
+    color: rgba(255,255,255,0.45);
+    cursor: pointer;
+    text-decoration: none;
+    transition: color 200ms ease;
+  }
+  .footer-co-link:hover { color: var(--gold); }
+
+  /* ============================================
+     CHANGE ORDER SYSTEM (namespaced with co-)
+     ============================================ */
+
+  .co-mode-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: var(--dark);
+    border-bottom: 2px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    height: 48px;
+  }
+  .co-mode-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .co-back-btn {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.6);
+    background: none;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 6px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .co-back-btn:hover {
+    color: var(--gold);
+    border-color: var(--gold);
+  }
+  .co-mode-bar-logo {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--gold);
+    letter-spacing: -0.5px;
+  }
+  .co-mode-bar-title {
+    font-size: 12px;
+    color: var(--grey);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .co-mode-switcher {
+    display: flex;
+    background: rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .co-mode-btn {
+    padding: 6px 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--grey);
+    background: none;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.25s;
+    white-space: nowrap;
+  }
+  .co-mode-btn.active {
+    background: var(--gold);
+    color: var(--dark);
+  }
+  .co-mode-btn:not(.active):hover {
+    color: var(--white);
+  }
+  .co-mode-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .co-mode-badge {
+    background: rgba(255,178,11,0.15);
+    border: 1px solid var(--gold-border);
+    color: var(--gold);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Interface containers */
+  .co-interface { display: none; }
+  .co-interface.active { display: block; }
+
+  /* ============================================
+     INTERNAL OPS INTERFACE
+     ============================================ */
+
+  .ops-topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    position: fixed;
+    top: 48px;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ops-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark);
+  }
+  .ops-topbar-icon {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Step indicator */
+  .co-step-bar {
+    position: fixed;
+    top: 98px;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    z-index: 99;
+    padding: 0 32px;
+  }
+  .co-step-bar-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 14px 0;
+  }
+  .co-step-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    cursor: pointer;
+    position: relative;
+  }
+  .co-step-item:not(:last-child)::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin-left: 8px;
+  }
+  .co-step-item.completed:not(:last-child)::after {
+    background: var(--gold);
+  }
+  .co-step-dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--grey);
+    background: var(--white);
+    flex-shrink: 0;
+    transition: all 0.3s;
+  }
+  .co-step-item.active .co-step-dot {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: var(--dark);
+  }
+  .co-step-item.completed .co-step-dot {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: var(--dark);
+  }
+  .co-step-label {
+    font-size: 11px;
+    color: var(--grey);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .co-step-item.active .co-step-label { color: var(--dark); font-weight: 600; }
+  .co-step-item.completed .co-step-label { color: var(--muted-fg); }
+
+  .ops-main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 160px 32px 60px;
+    min-height: 100vh;
+  }
+
+  /* ============================================
+     CLIENT PORTAL INTERFACE
+     ============================================ */
+
+  .portal-nav {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    position: fixed;
+    top: 48px;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .portal-logo {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--dark);
+    letter-spacing: -0.5px;
+  }
+  .portal-nav-links {
+    display: flex;
+    gap: 4px;
+  }
+  .portal-nav-link {
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--grey);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .portal-nav-link:hover { color: var(--dark); background: var(--accent); }
+  .portal-nav-link.active { color: var(--dark); font-weight: 600; background: var(--accent); }
+  .portal-nav-link .notif-dot {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    border: 2px solid var(--white);
+  }
+  .portal-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    color: var(--muted-fg);
+  }
+  .portal-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted-fg);
+  }
+
+  .client-main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 120px 20px 60px;
+    min-height: 100vh;
+  }
+
+  /* ============================================
+     CHANGE ORDER: SHARED COMPONENTS (co- prefixed)
+     ============================================ */
+
+  .co-screen, .co-view-item { display: none; }
+  .co-screen.active, .co-view-item.active { display: block; animation: coFadeIn 0.35s ease; }
+  @keyframes coFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .co-card {
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .co-card-pad { padding: 24px; }
+  .co-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 24px 24px 0;
+  }
+  .co-card h2 { font-size: 18px; font-weight: 600; color: var(--dark); }
+  .co-card h3 { font-size: 15px; font-weight: 600; color: var(--dark); margin-bottom: 8px; }
+  .co-card-title { font-size: 16px; font-weight: 650; color: var(--dark); margin-bottom: 4px; }
+  .co-card-subtitle { font-size: 13px; color: var(--grey); margin-bottom: 16px; }
+
+  .co-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .co-tag-gold { background: var(--gold-light); color: #b87d00; border: 1px solid var(--gold-border); }
+  .co-tag-green { background: var(--green-light); color: var(--green); }
+  .co-tag-red { background: var(--red-light); color: var(--red); }
+  .co-tag-blue { background: var(--blue-light); color: var(--blue); }
+  .co-tag-grey { background: var(--muted-bg); color: var(--grey); }
+
+  .co-ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--gold);
+    background: var(--gold-light);
+    border: 1px solid var(--gold-border);
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .co-ai-badge::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--gold);
+    border-radius: 50%;
+    animation: coPulse 2s infinite;
+  }
+  @keyframes coPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  .co-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .co-btn-primary { background: var(--gold); color: var(--dark); }
+  .co-btn-primary:hover { background: var(--gold-hover); }
+  .co-btn-secondary { background: var(--white); color: var(--dark); border: 1px solid var(--border); }
+  .co-btn-secondary:hover { background: var(--muted-bg); }
+  .co-btn-dark { background: var(--dark); color: var(--white); }
+  .co-btn-dark:hover { background: #1a0e25; }
+  .co-btn-group { display: flex; gap: 12px; margin-top: 24px; }
+  .co-btn-full { width: 100%; padding: 14px 28px; border-radius: 12px; font-size: 15px; }
+  .co-btn-back {
+    background: none; color: var(--grey); font-size: 13px;
+    font-weight: 500; padding: 10px; border: none; cursor: pointer;
+  }
+  .co-btn-back:hover { color: var(--dark); }
+
+  .co-form-group { margin-bottom: 20px; }
+  .co-form-label { display: block; font-size: 13px; font-weight: 600; color: var(--muted-fg); margin-bottom: 6px; }
+  .co-form-input, .co-form-select, .co-form-textarea {
+    width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 14px; font-family: inherit;
+    color: var(--dark); background: var(--white); transition: border-color 0.2s;
+  }
+  .co-form-input:focus, .co-form-select:focus, .co-form-textarea:focus {
+    outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-light);
+  }
+  .co-form-textarea { resize: vertical; min-height: 100px; }
+
+  #co-view { color: var(--dark); }
+  .co-table-wrap { overflow-x: auto; }
+  #co-view table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  #co-view th {
+    text-align: left; font-size: 11px; font-weight: 600; color: var(--grey);
+    text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  #co-view td { padding: 14px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  #co-view tr:last-child td { border-bottom: none; }
+  #co-view tr:hover td { background: var(--accent); }
+
+  .co-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .co-stat-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .co-stat-value { font-size: 28px; font-weight: 700; color: var(--dark); line-height: 1.2; }
+  .co-stat-label { font-size: 12px; color: var(--grey); margin-top: 4px; }
+
+  .co-doc { border: 2px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .co-doc-header {
+    background: var(--dark); color: var(--white); padding: 24px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .co-doc-body { padding: 24px; }
+  .co-doc-section { margin-bottom: 24px; }
+  .co-doc-section:last-child { margin-bottom: 0; }
+  .co-doc-section h4 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--grey); margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .co-line-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--accent); }
+  .co-line-item:last-child { border-bottom: none; }
+  .co-line-item-label { font-size: 14px; color: var(--dark); }
+  .co-line-item-value { font-size: 14px; font-weight: 600; }
+  .co-line-item-remove { color: var(--red); text-decoration: line-through; }
+
+  .co-timeline-bar { display: flex; gap: 2px; margin: 12px 0; height: 32px; border-radius: 6px; overflow: hidden; }
+  .co-timeline-segment { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--white); }
+
+  .co-brief-section { background: var(--accent); border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+  .co-brief-section h4 { font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 8px; }
+  .co-brief-checklist { list-style: none; }
+  .co-brief-checklist li { padding: 6px 0; font-size: 14px; display: flex; align-items: flex-start; gap: 8px; }
+  .co-brief-checklist li::before { content: ''; width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px; flex-shrink: 0; margin-top: 2px; }
+
+  .co-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+  .co-screen-title { margin-bottom: 24px; }
+  .co-screen-title h1 { font-size: 24px; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+  .co-screen-title p { font-size: 14px; color: var(--grey); }
+
+  .co-divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* ============================================
+     CLIENT-SPECIFIC COMPONENTS
+     ============================================ */
+
+  .co-project-header {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px; margin-bottom: 20px;
+  }
+  .co-project-header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .co-project-name { font-size: 20px; font-weight: 700; color: var(--dark); }
+  .co-project-address { font-size: 13px; color: var(--grey); margin-top: 2px; }
+  .co-project-status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    background: var(--green-light); color: var(--green);
+  }
+  .co-project-status-badge::before { content: ''; width: 7px; height: 7px; background: var(--green); border-radius: 50%; }
+  .co-project-progress { display: flex; gap: 4px; }
+  .co-progress-segment { height: 6px; border-radius: 3px; flex: 1; }
+
+  .co-notif-banner {
+    background: var(--gold-light); border: 1px solid var(--gold-border);
+    border-radius: 14px; padding: 20px 24px; margin-bottom: 16px;
+    display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s;
+  }
+  .co-notif-banner:hover { border-color: var(--gold); background: rgba(255,178,11,0.12); }
+  .co-notif-icon {
+    width: 44px; height: 44px; background: var(--gold); border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .co-notif-icon svg { width: 22px; height: 22px; }
+
+  .co-hero-block { background: var(--dark); color: var(--white); padding: 32px 24px; text-align: center; }
+  .co-hero-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); margin-bottom: 8px; font-weight: 600; }
+  .co-hero-block h2 { font-size: 20px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .co-hero-block p { font-size: 13px; color: var(--grey); }
+
+  .co-summary-grid { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--border); }
+  .co-summary-cell { padding: 20px 24px; text-align: center; }
+  .co-summary-cell:first-child { border-right: 1px solid var(--border); }
+  .co-summary-value { font-size: 26px; font-weight: 700; color: var(--dark); line-height: 1.2; }
+  .co-summary-label { font-size: 12px; color: var(--grey); margin-top: 2px; }
+
+  .co-change-item { padding: 16px 24px; border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; align-items: flex-start; }
+  .co-change-item:last-child { border-bottom: none; }
+  .co-change-item-desc { font-size: 14px; color: var(--dark); flex: 1; padding-right: 16px; }
+  .co-change-item-note { font-size: 12px; color: var(--grey); margin-top: 3px; }
+  .co-change-item-cost { font-size: 15px; font-weight: 600; white-space: nowrap; }
+
+  .co-advisor-msg {
+    padding: 20px 24px; background: var(--accent);
+    border-bottom: 1px solid var(--border); display: flex; gap: 14px; align-items: flex-start;
+  }
+  .co-advisor-avatar {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: var(--dark); flex-shrink: 0;
+  }
+  .co-advisor-name { font-weight: 600; color: var(--dark); font-size: 13px; margin-bottom: 4px; }
+  .co-advisor-text { font-size: 14px; color: var(--muted-fg); }
+
+  .co-section-label {
+    padding: 14px 24px 8px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px; color: var(--grey);
+    border-bottom: 1px solid var(--border); background: var(--accent);
+  }
+
+  .co-totals-section { padding: 20px 24px; }
+  .co-totals-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; color: var(--muted-fg); }
+  .co-totals-row.final { border-top: 2px solid var(--dark); margin-top: 8px; padding-top: 12px; font-size: 16px; font-weight: 700; color: var(--dark); }
+
+  .co-milestone { padding: 14px 24px; border-bottom: 1px solid var(--accent); display: flex; justify-content: space-between; align-items: center; }
+  .co-milestone:last-child { border-bottom: none; }
+  .co-milestone-name { font-size: 14px; color: var(--dark); }
+  .co-milestone-detail { font-size: 12px; color: var(--grey); margin-top: 2px; }
+  .co-milestone-amount { font-size: 14px; font-weight: 600; text-align: right; }
+  .co-milestone-changed { font-size: 11px; color: var(--gold); font-weight: 600; }
+  .co-milestone-paid { font-size: 11px; color: var(--green); font-weight: 600; }
+
+  .co-timeline-visual { padding: 20px 24px; }
+  .co-timeline-bar-wrap { display: flex; gap: 3px; height: 28px; border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+  .co-tl-seg { display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--white); border-radius: 4px; }
+  .co-timeline-dates { display: flex; justify-content: space-between; font-size: 11px; color: var(--grey); }
+
+  .co-btn-area { padding: 20px 24px; border-top: 1px solid var(--border); }
+  .co-btn-legal { font-size: 11px; color: var(--grey); text-align: center; margin-top: 12px; line-height: 1.5; }
+
+  .co-confirmation { text-align: center; padding: 48px 24px; }
+  .co-confirm-icon {
+    width: 64px; height: 64px; background: var(--green-light); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;
+  }
+  .co-confirm-icon svg { width: 32px; height: 32px; color: var(--green); }
+  .co-confirm-title { font-size: 20px; font-weight: 700; color: var(--dark); margin-bottom: 8px; }
+  .co-confirm-text { font-size: 14px; color: var(--grey); max-width: 360px; margin: 0 auto; }
+
+  .co-history-item {
+    padding: 16px 24px; border-bottom: 1px solid var(--accent);
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; transition: background 0.15s;
+  }
+  .co-history-item:hover { background: var(--accent); }
+  .co-history-item:last-child { border-bottom: none; }
+  .co-history-title { font-size: 14px; font-weight: 500; color: var(--dark); margin-bottom: 2px; }
+  .co-history-meta { font-size: 12px; color: var(--grey); }
+  .co-history-tag { font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 6px; }
+  .co-history-tag-pending { background: var(--gold-light); color: #b87d00; }
+
+  /* Processing overlay */
+  .processing-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15, 5, 25, 0.7); z-index: 300;
+    justify-content: center; align-items: center;
+  }
+  .processing-overlay.active { display: flex; }
+  .processing-box { background: var(--white); border-radius: 16px; padding: 48px; text-align: center; max-width: 400px; width: 90%; }
+  .processing-spinner {
+    width: 48px; height: 48px; border: 3px solid var(--border);
+    border-top-color: var(--gold); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 24px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .processing-steps { text-align: left; margin-top: 20px; }
+  .processing-step { padding: 8px 0; font-size: 13px; color: var(--grey); display: flex; align-items: center; gap: 10px; }
+  .processing-step.done { color: var(--green); }
+  .processing-step.active { color: var(--dark); font-weight: 600; }
+  .processing-check { width: 16px; text-align: center; }
+
+  .co-footer { text-align: center; padding: 40px 32px; color: var(--grey); font-size: 12px; }
+  .co-footer-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--secondary); margin-bottom: 4px; }
+
+  /* ============================================
+     RESPONSIVE: LANDING PAGE
+     ============================================ */
+  @media (max-width: 880px) {
+    .scene-content { padding: 90px 24px; }
+    .nav { padding: 14px 20px; }
+    .scene-dots { display: none; }
+    .arrow.prev { left: 20px; }
+    .arrow.next { left: 76px; }
+    .hint { display: none; }
+    .exp-grid { grid-template-columns: 1fr; }
+    .footer-row { flex-direction: column; align-items: flex-start; }
+    h1.hero-h, h2.scene-h { font-size: 40px; }
+    h2.exp-h { font-size: 36px; }
+    .scene-scrim {
+      background: linear-gradient(180deg, rgba(15,5,25,0.55), rgba(15,5,25,0.85));
+    }
+  }
+
+  /* ============================================
+     RESPONSIVE: CHANGE ORDER
+     ============================================ */
+  @media (max-width: 768px) {
+    .co-stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .co-two-col { grid-template-columns: 1fr; }
+    .co-step-label { display: none; }
+    .ops-main { padding: 150px 16px 40px; }
+    .client-main { padding: 110px 12px 40px; }
+    .co-mode-bar { padding: 0 16px; }
+    .co-mode-bar-title { display: none; }
+    .portal-nav-links { display: none; }
+    .co-summary-value { font-size: 22px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .scene.active .scene-img { animation: none; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 200ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     VIEW 1: REACT SCENE DECK (LANDING PAGE)
+     ============================================ -->
+<div id="root"></div>
+
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+    <rect width="200" height="200" fill="#0f0519"/>
+    <g transform="translate(100 100)">
+      <circle r="42" fill="none" stroke="#ffb20b" stroke-width="3"/>
+      <circle r="6" fill="#ffb20b"/>
+      <text x="0" y="58" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="600" fill="#ffb20b" letter-spacing="0.1em">BEAMS</text>
+    </g>
+  </svg>
+</template>
+
+<!-- ============================================
+     VIEW 2: CHANGE ORDER SYSTEM
+     ============================================ -->
+<div id="co-view" style="display:none">
+
+  <!-- MODE SWITCHER BAR -->
+  <div class="co-mode-bar">
+    <div class="co-mode-bar-left">
+      <button class="co-back-btn" onclick="window.showPlan()">&larr; Back to 90-Day Plan</button>
+      <span class="co-mode-bar-logo">beams</span>
+      <span class="co-mode-bar-title">Change Order System</span>
+    </div>
+    <div class="co-mode-switcher">
+      <button class="co-mode-btn active" onclick="coSwitchMode('ops')">Internal Ops</button>
+      <button class="co-mode-btn" onclick="coSwitchMode('client')">Client Portal</button>
+    </div>
+    <div class="co-mode-bar-right">
+      <span class="co-ai-badge">AI-Assisted</span>
+      <span class="co-mode-badge">Prototype</span>
+    </div>
+  </div>
+
+  <!-- ============================================
+       INTERNAL OPS INTERFACE
+       ============================================ -->
+  <div class="co-interface active" id="co-interface-ops">
+
+    <div class="ops-topbar">
+      <div class="ops-topbar-left">
+        <div class="ops-topbar-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--dark)" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </div>
+        Change Orders Dashboard
+      </div>
+      <span class="co-ai-badge">AI-prioritised</span>
+    </div>
+
+    <div class="co-step-bar">
+      <div class="co-step-bar-inner">
+        <div class="co-step-item active" onclick="opsGoTo(0)">
+          <div class="co-step-dot">1</div>
+          <span class="co-step-label">Dashboard</span>
+        </div>
+        <div class="co-step-item" onclick="opsGoTo(1)">
+          <div class="co-step-dot">2</div>
+          <span class="co-step-label">Submit Change</span>
+        </div>
+        <div class="co-step-item" onclick="opsGoTo(2)">
+          <div class="co-step-dot">3</div>
+          <span class="co-step-label">Change Order</span>
+        </div>
+        <div class="co-step-item" onclick="opsGoTo(3)">
+          <div class="co-step-dot">4</div>
+          <span class="co-step-label">Client Preview</span>
+        </div>
+        <div class="co-step-item" onclick="opsGoTo(4)">
+          <div class="co-step-dot">5</div>
+          <span class="co-step-label">Builder Brief</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ops-main">
+
+      <!-- OPS SCREEN 1: DASHBOARD -->
+      <div class="co-screen active" id="ops-0">
+        <div class="co-screen-title">
+          <h1>Change Orders</h1>
+          <p>Active project changes across all live renovations</p>
+        </div>
+        <div class="co-stat-grid">
+          <div class="co-stat-card"><div class="co-stat-value">12</div><div class="co-stat-label">Active projects</div></div>
+          <div class="co-stat-card"><div class="co-stat-value" style="color:var(--gold)">3</div><div class="co-stat-label">Pending change orders</div></div>
+          <div class="co-stat-card"><div class="co-stat-value">1.4 days</div><div class="co-stat-label">Avg. turnaround time</div></div>
+          <div class="co-stat-card"><div class="co-stat-value">94%</div><div class="co-stat-label">First-quote acceptance</div></div>
+        </div>
+        <div class="co-card">
+          <div class="co-card-header"><h2>Pending Changes</h2><span class="co-ai-badge">AI-prioritised</span></div>
+          <div class="co-table-wrap" style="padding:0 24px 24px;">
+            <table>
+              <thead><tr><th>Project</th><th>Client</th><th>Change</th><th>Est. Impact</th><th>Priority</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr style="cursor:pointer" onclick="opsGoTo(1)">
+                  <td><strong>PRJ-0847</strong></td><td>Sarah &amp; Tom Mitchell</td>
+                  <td>Kitchen island specification upgrade</td><td style="font-weight:600">+&pound;3,200</td>
+                  <td><span class="co-tag co-tag-gold">High</span></td><td><span class="co-tag co-tag-blue">New request</span></td>
+                </tr>
+                <tr>
+                  <td><strong>PRJ-0831</strong></td><td>James Chen</td>
+                  <td>Additional downlighting (6 units)</td><td style="font-weight:600">+&pound;840</td>
+                  <td><span class="co-tag co-tag-grey">Medium</span></td><td><span class="co-tag co-tag-gold">Awaiting approval</span></td>
+                </tr>
+                <tr>
+                  <td><strong>PRJ-0819</strong></td><td>Priya Sharma</td>
+                  <td>Bathroom tile change (Porcelanosa to Fired Earth)</td><td style="font-weight:600">+&pound;1,560</td>
+                  <td><span class="co-tag co-tag-grey">Medium</span></td><td><span class="co-tag co-tag-green">Approved</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="co-card">
+          <div class="co-card-header"><h2>Recent Activity</h2></div>
+          <div style="font-size:14px;color:var(--muted-fg);padding:0 24px 24px;">
+            <div style="padding:8px 0;border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;"><span>PRJ-0819 change order approved by client</span><span style="color:var(--grey);font-size:12px;">2 hours ago</span></div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;"><span>PRJ-0831 change order sent to client for review</span><span style="color:var(--grey);font-size:12px;">Yesterday</span></div>
+            <div style="padding:8px 0;display:flex;justify-content:space-between;"><span>PRJ-0812 builder confirmed revised instructions</span><span style="color:var(--grey);font-size:12px;">2 days ago</span></div>
+          </div>
+        </div>
+        <div class="co-btn-group"><button class="co-btn co-btn-primary" onclick="opsGoTo(1)">Process new change request &rarr;</button></div>
+      </div>
+
+      <!-- OPS SCREEN 2: CHANGE REQUEST INTAKE -->
+      <div class="co-screen" id="ops-1">
+        <div class="co-screen-title">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+            <h1>New Change Request</h1><span class="co-ai-badge">AI-assisted intake</span>
+          </div>
+          <p>PRJ-0847 &middot; Sarah &amp; Tom Mitchell &middot; Full kitchen renovation, Clapham</p>
+        </div>
+        <div class="co-two-col">
+          <div>
+            <div class="co-card" style="padding:24px;">
+              <h3>Change Details</h3>
+              <div class="co-form-group"><label class="co-form-label">Change category</label>
+                <select class="co-form-select"><option value="">Select category...</option><option selected>Specification upgrade</option><option>Scope addition</option><option>Scope removal</option><option>Timeline adjustment</option><option>Materials change</option></select>
+              </div>
+              <div class="co-form-group"><label class="co-form-label">Affected area</label>
+                <select class="co-form-select"><option value="">Select area...</option><option selected>Kitchen</option><option>Bathroom</option><option>Living area</option><option>Structural</option><option>Electrical</option><option>Plumbing</option></select>
+              </div>
+              <div class="co-form-group"><label class="co-form-label">Description of change</label>
+                <textarea class="co-form-textarea">Client wants to upgrade the kitchen island from the originally specified laminate worktop to a quartz composite (Caesarstone, colour: Fresh Concrete 4001). Also wants to add an integrated undermount sink to the island, which was not in the original scope. Requires revised plumbing run.</textarea>
+              </div>
+              <div class="co-form-group"><label class="co-form-label">Requested by</label>
+                <select class="co-form-select"><option selected>Client (via Build Advisor)</option><option>Build Advisor recommendation</option><option>Builder recommendation</option></select>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="co-card" style="padding:24px;border-color:var(--gold-border);background:var(--gold-light);">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><span class="co-ai-badge">AI Analysis</span></div>
+              <h3>Auto-classification</h3>
+              <div style="font-size:14px;margin-bottom:16px;">
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gold-border);"><span>Change type</span><strong>Specification upgrade + Scope addition</strong></div>
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gold-border);"><span>Trades affected</span><strong>Joinery, Plumbing</strong></div>
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gold-border);"><span>Timeline impact</span><strong style="color:var(--red);">+3 to 5 days</strong></div>
+                <div style="display:flex;justify-content:space-between;padding:8px 0;"><span>Complexity</span><strong>Medium</strong></div>
+              </div>
+              <h3>Flagged considerations</h3>
+              <div style="font-size:13px;color:var(--muted-fg);">
+                <div style="padding:6px 0;">1. Undermount sink on island requires waste pipe run to floor. Confirm access through island base unit.</div>
+                <div style="padding:6px 0;">2. Quartz worktop has 3-week lead time from supplier. May affect project completion date.</div>
+                <div style="padding:6px 0;">3. Similar change on PRJ-0712 cost &pound;2,800 to &pound;3,400 depending on sink spec.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="co-btn-group">
+          <button class="co-btn co-btn-secondary" onclick="opsGoTo(0)">&larr; Back</button>
+          <button class="co-btn co-btn-primary" onclick="showProcessing()">Generate change order &rarr;</button>
+        </div>
+      </div>
+
+      <!-- OPS SCREEN 3: GENERATED CHANGE ORDER -->
+      <div class="co-screen" id="ops-2">
+        <div class="co-screen-title">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+            <h1>Change Order CO-0847-01</h1><span class="co-ai-badge">AI-generated</span>
+          </div>
+          <p>Review the generated change order before sending to client</p>
+        </div>
+        <div class="co-doc">
+          <div class="co-doc-header">
+            <div>
+              <div style="font-size:20px;font-weight:700;color:var(--gold);margin-bottom:2px;">beams</div>
+              <div style="font-size:18px;font-weight:600;">Change Order</div>
+              <div style="font-size:13px;color:var(--grey);margin-top:4px;">CO-0847-01 &middot; 1 May 2026</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:13px;color:var(--grey);">Project</div>
+              <div style="font-size:15px;font-weight:600;">PRJ-0847</div>
+              <div style="font-size:13px;color:var(--grey);margin-top:8px;">Client</div>
+              <div style="font-size:15px;">Sarah &amp; Tom Mitchell</div>
+            </div>
+          </div>
+          <div class="co-doc-body">
+            <div class="co-doc-section">
+              <h4>Summary of changes</h4>
+              <p style="font-size:14px;color:var(--muted-fg);margin-bottom:12px;">Upgrade kitchen island worktop from laminate to quartz composite (Caesarstone Fresh Concrete 4001) and add integrated undermount sink with revised plumbing run.</p>
+            </div>
+            <div class="co-doc-section">
+              <h4>Line items</h4>
+              <div class="co-line-item"><span class="co-line-item-label co-line-item-remove">Laminate worktop (island) - supply and fit</span><span class="co-line-item-value" style="color:var(--red);">-&pound;680</span></div>
+              <div class="co-line-item"><span class="co-line-item-label" style="color:var(--green);">Caesarstone quartz worktop (Fresh Concrete 4001) - supply and fit</span><span class="co-line-item-value" style="color:var(--green);">+&pound;2,140</span></div>
+              <div class="co-line-item"><span class="co-line-item-label" style="color:var(--green);">Undermount sink (Blanco Subline 500-U) - supply</span><span class="co-line-item-value" style="color:var(--green);">+&pound;380</span></div>
+              <div class="co-line-item"><span class="co-line-item-label" style="color:var(--green);">Sink cut-out, fitting, and waste connection</span><span class="co-line-item-value" style="color:var(--green);">+&pound;420</span></div>
+              <div class="co-line-item"><span class="co-line-item-label" style="color:var(--green);">Plumbing: waste pipe run through island base to floor</span><span class="co-line-item-value" style="color:var(--green);">+&pound;940</span></div>
+              <div class="co-divider"></div>
+              <div class="co-line-item"><span class="co-line-item-label" style="font-weight:700;font-size:15px;">Net change</span><span class="co-line-item-value" style="font-size:18px;color:var(--dark);">+&pound;3,200</span></div>
+            </div>
+            <div class="co-doc-section">
+              <h4>Revised project total</h4>
+              <div style="display:flex;gap:32px;font-size:14px;">
+                <div><div style="color:var(--grey);font-size:12px;">Original contract</div><div style="font-size:20px;font-weight:700;">&pound;42,500</div></div>
+                <div><div style="color:var(--grey);font-size:12px;">This change order</div><div style="font-size:20px;font-weight:700;color:var(--gold);">+&pound;3,200</div></div>
+                <div><div style="color:var(--grey);font-size:12px;">New total</div><div style="font-size:20px;font-weight:700;">&pound;45,700</div></div>
+              </div>
+            </div>
+            <div class="co-doc-section">
+              <h4>Revised milestone payments</h4>
+              <table>
+                <thead><tr><th>Milestone</th><th>Original</th><th>Revised</th><th>Change</th></tr></thead>
+                <tbody>
+                  <tr><td>1. Deposit (paid)</td><td>&pound;8,500</td><td>&pound;8,500</td><td style="color:var(--grey);">No change</td></tr>
+                  <tr><td>2. First fix complete</td><td>&pound;12,750</td><td>&pound;12,750</td><td style="color:var(--grey);">No change</td></tr>
+                  <tr><td>3. Second fix complete</td><td>&pound;12,750</td><td style="font-weight:600;">&pound;14,710</td><td style="color:var(--gold);font-weight:600;">+&pound;1,960</td></tr>
+                  <tr><td>4. Completion and handover</td><td>&pound;8,500</td><td style="font-weight:600;">&pound;9,740</td><td style="color:var(--gold);font-weight:600;">+&pound;1,240</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="co-doc-section">
+              <h4>Timeline impact</h4>
+              <div style="font-size:14px;margin-bottom:12px;"><span style="font-weight:600;">Estimated extension: 4 working days</span><span style="color:var(--grey);"> (quartz lead time absorbed into existing schedule; plumbing adds 2 days; fitting adds 2 days)</span></div>
+              <div class="co-timeline-bar">
+                <div class="co-timeline-segment" style="flex:3;background:var(--green);">Complete</div>
+                <div class="co-timeline-segment" style="flex:2;background:var(--blue);">In progress</div>
+                <div class="co-timeline-segment" style="flex:2;background:var(--grey);">Remaining</div>
+                <div class="co-timeline-segment" style="flex:1;background:var(--gold);">+4 days</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="co-btn-group">
+          <button class="co-btn co-btn-secondary" onclick="opsGoTo(1)">&larr; Back</button>
+          <button class="co-btn co-btn-primary" onclick="opsGoTo(3)">Send to client for approval &rarr;</button>
+        </div>
+      </div>
+
+      <!-- OPS SCREEN 4: CLIENT PREVIEW -->
+      <div class="co-screen" id="ops-3">
+        <div class="co-screen-title" style="text-align:center;">
+          <p style="color:var(--grey);font-size:12px;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Client preview</p>
+          <h1>What the homeowner sees</h1>
+          <p>This is the in-app approval experience sent to the client. <a href="#" onclick="coSwitchMode('client');return false;" style="color:var(--gold);font-weight:600;">Switch to full client view &rarr;</a></p>
+        </div>
+        <div style="max-width:560px;margin:0 auto;">
+          <div class="co-card" style="box-shadow:0 4px 24px rgba(0,0,0,0.06);">
+            <div style="background:var(--dark);color:var(--white);padding:32px;text-align:center;">
+              <div style="font-size:20px;font-weight:700;color:var(--gold);margin-bottom:12px;">beams</div>
+              <h2 style="color:var(--white);font-size:22px;margin-bottom:4px;">Change to your project</h2>
+              <p style="color:var(--grey);font-size:14px;">Your Build Advisor has prepared an update</p>
+            </div>
+            <div style="padding:28px;">
+              <p style="font-size:15px;color:var(--muted-fg);margin-bottom:20px;">Hi Sarah and Tom, you asked about upgrading the kitchen island worktop and adding an undermount sink. Here is what that looks like.</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+                <div style="text-align:center;padding:16px;background:var(--accent);border-radius:10px;"><div style="font-size:24px;font-weight:700;">+&pound;3,200</div><div style="font-size:12px;color:var(--grey);margin-top:2px;">Additional cost</div></div>
+                <div style="text-align:center;padding:16px;background:var(--accent);border-radius:10px;"><div style="font-size:24px;font-weight:700;">+4 days</div><div style="font-size:12px;color:var(--grey);margin-top:2px;">Timeline extension</div></div>
+              </div>
+              <h3 style="margin-bottom:12px;">What is changing</h3>
+              <div style="font-size:14px;color:var(--muted-fg);">
+                <div style="padding:10px 0;border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;"><span>Quartz worktop (replaces laminate)</span><span style="font-weight:600;">+&pound;1,460</span></div>
+                <div style="padding:10px 0;border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;"><span>Undermount sink, supply and fit</span><span style="font-weight:600;">+&pound;800</span></div>
+                <div style="padding:10px 0;border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;"><span>Plumbing (new waste run)</span><span style="font-weight:600;">+&pound;940</span></div>
+                <div style="padding:10px 0;display:flex;justify-content:space-between;"><span style="font-weight:600;">New project total</span><span style="font-weight:700;font-size:16px;">&pound;45,700</span></div>
+              </div>
+              <div class="co-btn-group" style="justify-content:center;">
+                <button class="co-btn co-btn-dark" onclick="opsGoTo(4)">Approve change</button>
+                <button class="co-btn co-btn-secondary">Request discussion</button>
+              </div>
+              <p style="font-size:11px;color:var(--grey);text-align:center;margin-top:16px;">By approving, you agree to the revised project total and payment schedule.</p>
+            </div>
+          </div>
+        </div>
+        <div class="co-btn-group" style="justify-content:center;margin-top:32px;">
+          <button class="co-btn co-btn-secondary" onclick="opsGoTo(2)">&larr; Back to change order</button>
+          <button class="co-btn co-btn-primary" onclick="opsGoTo(4)">View builder brief &rarr;</button>
+        </div>
+      </div>
+
+      <!-- OPS SCREEN 5: BUILDER BRIEF -->
+      <div class="co-screen" id="ops-4">
+        <div class="co-screen-title">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+            <h1>Builder Instruction Brief</h1><span class="co-ai-badge">Auto-generated</span>
+          </div>
+          <p>Sent to the assigned builder on client approval</p>
+        </div>
+        <div class="co-card" style="border-left:4px solid var(--gold);padding:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+            <div>
+              <div style="font-size:12px;color:var(--grey);text-transform:uppercase;letter-spacing:1px;">Builder brief</div>
+              <div style="font-size:18px;font-weight:700;">CO-0847-01: Kitchen Island Upgrade</div>
+              <div style="font-size:13px;color:var(--grey);margin-top:2px;">PRJ-0847 &middot; Mitchell residence, Clapham &middot; Approved 1 May 2026</div>
+            </div>
+            <span class="co-tag co-tag-green">Approved</span>
+          </div>
+          <div class="co-brief-section">
+            <h4>What has changed</h4>
+            <p style="font-size:14px;color:var(--muted-fg);">The client has approved an upgrade to the kitchen island. The laminate worktop is replaced with quartz (Caesarstone Fresh Concrete 4001), and an undermount sink (Blanco Subline 500-U) has been added, requiring a new waste pipe run through the island base to floor level.</p>
+          </div>
+          <div class="co-brief-section">
+            <h4>Action items</h4>
+            <ul class="co-brief-checklist">
+              <li>Order Caesarstone Fresh Concrete 4001 slab, cut to island dimensions (confirm template date with supplier)</li>
+              <li>Order Blanco Subline 500-U undermount sink</li>
+              <li>Route waste pipe from island base unit through floor to connect to existing soil stack</li>
+              <li>Fit undermount sink with cut-out in quartz worktop (coordinate with stone fabricator)</li>
+              <li>Connect waste and water supply to island sink position</li>
+              <li>Test plumbing and sign off before worktop installation</li>
+            </ul>
+          </div>
+          <div class="co-two-col">
+            <div class="co-brief-section">
+              <h4>Trades required</h4>
+              <div style="font-size:14px;">
+                <div style="padding:4px 0;"><strong>Plumber</strong> - waste run and connections</div>
+                <div style="padding:4px 0;"><strong>Stone fabricator</strong> - template, cut, and fit quartz</div>
+                <div style="padding:4px 0;"><strong>Joiner</strong> - island base modification for plumbing access</div>
+              </div>
+            </div>
+            <div class="co-brief-section">
+              <h4>Timeline</h4>
+              <div style="font-size:14px;">
+                <div style="padding:4px 0;">Quartz lead time: <strong>3 weeks from order</strong></div>
+                <div style="padding:4px 0;">Plumbing rough-in: <strong>1 day</strong></div>
+                <div style="padding:4px 0;">Sink and worktop fit: <strong>1 day</strong></div>
+                <div style="padding:4px 0;">Project extension: <strong>4 working days</strong></div>
+              </div>
+            </div>
+          </div>
+          <div class="co-brief-section" style="background:var(--gold-light);border:1px solid var(--gold-border);">
+            <h4 style="color:var(--gold);">Important notes</h4>
+            <div style="font-size:14px;color:var(--muted-fg);">
+              <div style="padding:4px 0;">1. Confirm access through island base unit for waste pipe before ordering materials.</div>
+              <div style="padding:4px 0;">2. Coordinate quartz template visit with stone fabricator once plumbing rough-in is complete.</div>
+              <div style="padding:4px 0;">3. Client has been informed of the 4-day extension. Revised completion date to be confirmed once quartz is ordered.</div>
+            </div>
+          </div>
+        </div>
+        <div class="co-card" style="padding:24px;">
+          <h3>Audit trail</h3>
+          <div style="font-size:13px;color:var(--muted-fg);">
+            <div style="padding:8px 0;border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;"><span><strong>Change requested</strong> - Client via Build Advisor (Emma K.)</span><span style="color:var(--grey);">1 May 2026, 09:14</span></div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;"><span><strong>AI analysis complete</strong> - Auto-classified, pricing estimated</span><span style="color:var(--grey);">1 May 2026, 09:14</span></div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;"><span><strong>Change order generated</strong> - CO-0847-01 created</span><span style="color:var(--grey);">1 May 2026, 09:15</span></div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;"><span><strong>Build Advisor review</strong> - Approved by Emma K.</span><span style="color:var(--grey);">1 May 2026, 09:32</span></div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;"><span><strong>Sent to client</strong> - In-app notification and email</span><span style="color:var(--grey);">1 May 2026, 09:33</span></div>
+            <div style="padding:8px 0;border-bottom:1px solid var(--accent);display:flex;justify-content:space-between;"><span><strong>Client approved</strong> - Sarah Mitchell</span><span style="color:var(--grey);">1 May 2026, 11:47</span></div>
+            <div style="padding:8px 0;display:flex;justify-content:space-between;"><span><strong>Builder brief sent</strong> - Auto-generated and dispatched</span><span style="color:var(--grey);">1 May 2026, 11:47</span></div>
+          </div>
+        </div>
+        <div class="co-btn-group" style="justify-content:center;"><button class="co-btn co-btn-secondary" onclick="opsGoTo(0)">&larr; Back to dashboard</button></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================
+       CLIENT PORTAL INTERFACE
+       ============================================ -->
+  <div class="co-interface" id="co-interface-client">
+
+    <nav class="portal-nav">
+      <span class="portal-logo">beams</span>
+      <div class="portal-nav-links">
+        <div class="portal-nav-link active">My Project</div>
+        <div class="portal-nav-link">Updates<span class="notif-dot"></span></div>
+        <div class="portal-nav-link">Documents</div>
+        <div class="portal-nav-link">Payments</div>
+      </div>
+      <div class="portal-user"><span>Sarah M.</span><div class="portal-avatar">SM</div></div>
+    </nav>
+
+    <div class="client-main">
+
+      <!-- Project header -->
+      <div class="co-project-header">
+        <div class="co-project-header-top">
+          <div>
+            <div class="co-project-name">Kitchen Renovation</div>
+            <div class="co-project-address">42 Lavender Gardens, Clapham SW11</div>
+          </div>
+          <div class="co-project-status-badge">In progress</div>
+        </div>
+        <div class="co-project-progress">
+          <div class="co-progress-segment" style="background:var(--green);"></div>
+          <div class="co-progress-segment" style="background:var(--green);"></div>
+          <div class="co-progress-segment" style="background:var(--blue);"></div>
+          <div class="co-progress-segment" style="background:var(--border);"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--grey);"><span>Milestone 3 of 4</span><span>Est. completion: 6 June 2026</span></div>
+      </div>
+
+      <!-- CLIENT VIEW 1: DASHBOARD -->
+      <div class="co-view-item active" id="cv-dashboard">
+        <div class="co-notif-banner" onclick="clientView('detail')">
+          <div class="co-notif-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#0f0519" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+          </div>
+          <div style="flex:1;"><div style="font-size:14px;font-weight:600;color:var(--dark);margin-bottom:2px;">Change to your project</div><div style="font-size:13px;color:var(--muted-fg);">Your Build Advisor has prepared an update about the kitchen island. Review and approve the changes.</div></div>
+          <div style="color:var(--gold);font-size:20px;font-weight:300;">&rsaquo;</div>
+        </div>
+        <div class="co-card">
+          <div class="co-card-pad"><div class="co-card-title">Recent activity</div><div class="co-card-subtitle">Latest updates from your renovation</div></div>
+          <div style="font-size:14px;color:var(--muted-fg);">
+            <div style="padding:14px 24px;border-top:1px solid var(--accent);display:flex;justify-content:space-between;"><span>Second fix electrical work completed</span><span style="color:var(--grey);font-size:12px;">Today</span></div>
+            <div style="padding:14px 24px;border-top:1px solid var(--accent);display:flex;justify-content:space-between;"><span>Tiling started in kitchen area</span><span style="color:var(--grey);font-size:12px;">Yesterday</span></div>
+            <div style="padding:14px 24px;border-top:1px solid var(--accent);display:flex;justify-content:space-between;"><span>Milestone 2 payment processed</span><span style="color:var(--grey);font-size:12px;">28 Apr</span></div>
+          </div>
+        </div>
+        <div class="co-card">
+          <div class="co-card-pad"><div class="co-card-title">Change orders</div><div class="co-card-subtitle">Changes to your original project scope</div></div>
+          <div class="co-history-item" onclick="clientView('detail')">
+            <div><div class="co-history-title">Kitchen island specification upgrade</div><div class="co-history-meta">Submitted 1 May 2026 &middot; +&pound;3,200</div></div>
+            <span class="co-history-tag co-history-tag-pending">Awaiting review</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENT VIEW 2: CHANGE ORDER DETAIL -->
+      <div class="co-view-item" id="cv-detail">
+        <button class="co-btn-back" onclick="clientView('dashboard')">&larr; Back to project</button>
+        <div class="co-card" style="margin-top:8px;">
+          <div class="co-hero-block"><div class="co-hero-label">Change Order</div><h2>Kitchen Island Upgrade</h2><p>Submitted by your Build Advisor on 1 May 2026</p></div>
+          <div class="co-summary-grid">
+            <div class="co-summary-cell"><div class="co-summary-value">+&pound;3,200</div><div class="co-summary-label">Additional cost</div></div>
+            <div class="co-summary-cell"><div class="co-summary-value">+4 days</div><div class="co-summary-label">Timeline extension</div></div>
+          </div>
+          <div class="co-advisor-msg">
+            <div class="co-advisor-avatar">EK</div>
+            <div><div class="co-advisor-name">Emma K., your Build Advisor</div><div class="co-advisor-text">Hi Sarah and Tom. Following your request to upgrade the kitchen island worktop and add an undermount sink, I have put together the details below. The quartz has a 3-week lead time from the supplier, but we can absorb most of that into the existing schedule. The main impact is 4 additional working days for the plumbing and fitting work. Happy to jump on a call if you have any questions.</div></div>
+          </div>
+          <div class="co-section-label">What is changing</div>
+          <div class="co-change-item"><div><div class="co-change-item-desc">Quartz worktop replaces laminate</div><div class="co-change-item-note">Caesarstone Fresh Concrete 4001, supply and fit</div></div><div class="co-change-item-cost">+&pound;1,460</div></div>
+          <div class="co-change-item"><div><div class="co-change-item-desc">Undermount sink added</div><div class="co-change-item-note">Blanco Subline 500-U, supply, cut-out, and fitting</div></div><div class="co-change-item-cost">+&pound;800</div></div>
+          <div class="co-change-item"><div><div class="co-change-item-desc">Plumbing for island sink</div><div class="co-change-item-note">New waste pipe run through island base to floor</div></div><div class="co-change-item-cost">+&pound;940</div></div>
+          <div class="co-section-label">Revised project cost</div>
+          <div class="co-totals-section">
+            <div class="co-totals-row"><span>Original contract</span><span>&pound;42,500</span></div>
+            <div class="co-totals-row"><span>This change</span><span style="color:var(--gold);font-weight:600;">+&pound;3,200</span></div>
+            <div class="co-totals-row final"><span>New project total</span><span>&pound;45,700</span></div>
+          </div>
+          <div class="co-section-label">Updated payment schedule</div>
+          <div class="co-milestone"><div><div class="co-milestone-name">1. Deposit</div><div class="co-milestone-detail">Paid 14 March 2026</div></div><div class="co-milestone-amount">&pound;8,500<div class="co-milestone-paid">Paid</div></div></div>
+          <div class="co-milestone"><div><div class="co-milestone-name">2. First fix complete</div><div class="co-milestone-detail">Paid 18 April 2026</div></div><div class="co-milestone-amount">&pound;12,750<div class="co-milestone-paid">Paid</div></div></div>
+          <div class="co-milestone"><div><div class="co-milestone-name">3. Second fix complete</div><div class="co-milestone-detail">Due approx. 16 May 2026</div></div><div class="co-milestone-amount">&pound;14,710<div class="co-milestone-changed">Adjusted +&pound;1,960</div></div></div>
+          <div class="co-milestone"><div><div class="co-milestone-name">4. Completion and handover</div><div class="co-milestone-detail">Due approx. 10 June 2026</div></div><div class="co-milestone-amount">&pound;9,740<div class="co-milestone-changed">Adjusted +&pound;1,240</div></div></div>
+          <div class="co-section-label">Timeline</div>
+          <div class="co-timeline-visual">
+            <div class="co-timeline-bar-wrap">
+              <div class="co-tl-seg" style="flex:5;background:var(--green);">Complete</div>
+              <div class="co-tl-seg" style="flex:3;background:var(--blue);">In progress</div>
+              <div class="co-tl-seg" style="flex:2;background:var(--secondary);color:var(--muted-fg);">Remaining</div>
+              <div class="co-tl-seg" style="flex:1;background:var(--gold);color:var(--dark);">+4d</div>
+            </div>
+            <div class="co-timeline-dates"><span>Started 14 Mar</span><span>Original: 2 Jun</span><span>Revised: 10 Jun</span></div>
+          </div>
+          <div class="co-btn-area">
+            <button class="co-btn co-btn-dark co-btn-full" onclick="clientApprove()">Approve this change</button>
+            <button class="co-btn co-btn-full" style="background:var(--white);color:var(--dark);border:1px solid var(--border);margin-top:10px;" onclick="clientView('discuss')">I have questions</button>
+            <div class="co-btn-legal">By approving, you agree to the revised project total and payment schedule. Your Build Advisor is available if you would like to discuss anything first.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENT VIEW 3: CONFIRMED -->
+      <div class="co-view-item" id="cv-confirmed">
+        <div class="co-card">
+          <div class="co-confirmation">
+            <div class="co-confirm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+            <div class="co-confirm-title">Change approved</div>
+            <div class="co-confirm-text">Your Build Advisor and builder have been notified. The updated payment schedule is now live in your account. Your revised completion date is 10 June 2026.</div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding:20px 24px;">
+            <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:12px;">What happens next</div>
+            <div style="font-size:14px;color:var(--muted-fg);">
+              <div style="padding:6px 0;display:flex;gap:12px;align-items:flex-start;"><span style="color:var(--gold);font-weight:700;font-size:16px;">1</span><span>Your builder receives detailed instructions for the island upgrade</span></div>
+              <div style="padding:6px 0;display:flex;gap:12px;align-items:flex-start;"><span style="color:var(--gold);font-weight:700;font-size:16px;">2</span><span>Quartz worktop will be ordered and templated once plumbing is in place</span></div>
+              <div style="padding:6px 0;display:flex;gap:12px;align-items:flex-start;"><span style="color:var(--gold);font-weight:700;font-size:16px;">3</span><span>Your next milestone payment (&pound;14,710) will be due when second fix is complete</span></div>
+            </div>
+          </div>
+          <div class="co-btn-area" style="border-top:1px solid var(--border);"><button class="co-btn co-btn-full" style="background:var(--white);color:var(--dark);border:1px solid var(--border);" onclick="clientView('dashboard')">Back to my project</button></div>
+        </div>
+      </div>
+
+      <!-- CLIENT VIEW 4: DISCUSSION -->
+      <div class="co-view-item" id="cv-discuss">
+        <button class="co-btn-back" onclick="clientView('detail')">&larr; Back to change order</button>
+        <div class="co-card" style="margin-top:8px;">
+          <div class="co-card-pad">
+            <div class="co-card-title">Talk to your Build Advisor</div>
+            <div class="co-card-subtitle">Emma will get back to you within a few hours</div>
+            <div style="margin-top:20px;">
+              <label style="display:block;font-size:13px;font-weight:600;color:var(--muted-fg);margin-bottom:6px;">What would you like to discuss?</label>
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+                <span style="padding:8px 16px;border:1px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--accent);color:var(--dark);" onclick="this.style.borderColor='var(--gold)';this.style.background='var(--gold-light)'">Cost breakdown</span>
+                <span style="padding:8px 16px;border:1px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--accent);color:var(--dark);" onclick="this.style.borderColor='var(--gold)';this.style.background='var(--gold-light)'">Timeline concerns</span>
+                <span style="padding:8px 16px;border:1px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--accent);color:var(--dark);" onclick="this.style.borderColor='var(--gold)';this.style.background='var(--gold-light)'">Alternative options</span>
+                <span style="padding:8px 16px;border:1px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--accent);color:var(--dark);" onclick="this.style.borderColor='var(--gold)';this.style.background='var(--gold-light)'">Something else</span>
+              </div>
+              <label style="display:block;font-size:13px;font-weight:600;color:var(--muted-fg);margin-bottom:6px;">Add a note (optional)</label>
+              <textarea style="width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;min-height:80px;resize:vertical;" placeholder="Anything specific you'd like to ask about..."></textarea>
+              <label style="display:block;font-size:13px;font-weight:600;color:var(--muted-fg);margin:16px 0 6px;">Preferred contact method</label>
+              <div style="display:flex;gap:8px;margin-bottom:20px;">
+                <span style="padding:8px 16px;border:2px solid var(--gold);border-radius:20px;font-size:13px;cursor:pointer;background:var(--gold-light);color:var(--dark);font-weight:500;">Phone call</span>
+                <span style="padding:8px 16px;border:1px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--accent);color:var(--dark);">Video call</span>
+                <span style="padding:8px 16px;border:1px solid var(--border);border-radius:20px;font-size:13px;cursor:pointer;background:var(--accent);color:var(--dark);">Message</span>
+              </div>
+              <button class="co-btn co-btn-dark co-btn-full" onclick="clientView('discuss-sent')">Send to Emma</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLIENT VIEW 5: DISCUSSION SENT -->
+      <div class="co-view-item" id="cv-discuss-sent">
+        <div class="co-card">
+          <div class="co-confirmation">
+            <div class="co-confirm-icon" style="background:var(--blue-light);"><svg viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+            <div class="co-confirm-title">Message sent</div>
+            <div class="co-confirm-text">Emma will be in touch shortly. You can still review the change order details while you wait. The change order will remain open until you are ready to approve or adjust.</div>
+          </div>
+          <div class="co-btn-area" style="border-top:1px solid var(--border);"><button class="co-btn co-btn-full" style="background:var(--white);color:var(--dark);border:1px solid var(--border);" onclick="clientView('detail')">Back to change order</button></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="co-footer">
+    <div class="co-footer-label">Prototype</div>
+    <div>Beams Change Order System &middot; Concept by Romeo Lam &middot; May 2026</div>
+  </div>
+
+</div>
+<!-- END co-view -->
+
+<!-- Processing overlay (shared) -->
+<div class="processing-overlay" id="processing">
+  <div class="processing-box">
+    <div class="processing-spinner"></div>
+    <div style="font-size:18px;font-weight:600;margin-bottom:4px;">Generating change order</div>
+    <div style="font-size:13px;color:var(--grey);">AI is analysing the change request</div>
+    <div class="processing-steps">
+      <div class="processing-step active" id="ps-1"><span class="processing-check">&bull;</span>Matching against original contract line items</div>
+      <div class="processing-step" id="ps-2"><span class="processing-check">&bull;</span>Retrieving comparable pricing from past projects</div>
+      <div class="processing-step" id="ps-3"><span class="processing-check">&bull;</span>Calculating timeline impact</div>
+      <div class="processing-step" id="ps-4"><span class="processing-check">&bull;</span>Recalculating milestone payments</div>
+      <div class="processing-step" id="ps-5"><span class="processing-check">&bull;</span>Generating change order document</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     VIEW SWITCHING FUNCTIONS
+     ============================================ -->
+<script>
+window.showChangeOrder = function() {
+  document.getElementById('root').style.display = 'none';
+  document.querySelector('.stage').style.display = 'none';
+  document.querySelector('.progress-rail').style.display = 'none';
+  document.querySelector('.nav').style.display = 'none';
+  document.querySelector('.scene-dots').style.display = 'none';
+  document.querySelectorAll('.arrow').forEach(function(a) { a.style.display = 'none'; });
+  document.querySelector('.hint').style.display = 'none';
+  document.getElementById('co-view').style.display = 'block';
+  document.body.style.overflow = 'auto';
+  document.body.style.background = '#f3f3f3';
+  document.documentElement.style.overflow = 'auto';
+  window.scrollTo({ top: 0 });
+};
+
+window.showPlan = function() {
+  document.getElementById('co-view').style.display = 'none';
+  document.getElementById('root').style.display = 'block';
+  document.querySelector('.stage').style.display = 'block';
+  document.querySelector('.progress-rail').style.display = 'block';
+  document.querySelector('.nav').style.display = 'flex';
+  document.querySelector('.scene-dots').style.display = 'flex';
+  document.querySelectorAll('.arrow').forEach(function(a) { a.style.display = 'flex'; });
+  document.querySelector('.hint').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  document.body.style.background = '#0f0519';
+  document.documentElement.style.overflow = 'hidden';
+  window.scrollTo({ top: 0 });
+};
+</script>
+
+<!-- ============================================
+     CHANGE ORDER SYSTEM JAVASCRIPT
+     ============================================ -->
+<script>
+function coSwitchMode(mode) {
+  document.querySelectorAll('.co-interface').forEach(function(i) { i.classList.remove('active'); });
+  document.getElementById('co-interface-' + mode).classList.add('active');
+  document.querySelectorAll('.co-mode-btn').forEach(function(b) {
+    b.classList.toggle('active', b.textContent.trim().toLowerCase().indexOf(mode === 'ops' ? 'internal' : 'client') !== -1);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function opsGoTo(index) {
+  document.querySelectorAll('#co-interface-ops .co-screen').forEach(function(s, i) {
+    s.classList.toggle('active', i === index);
+  });
+  document.querySelectorAll('.co-step-item').forEach(function(s, i) {
+    s.classList.remove('active', 'completed');
+    if (i === index) s.classList.add('active');
+    if (i < index) s.classList.add('completed');
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clientView(id) {
+  document.querySelectorAll('#co-interface-client .co-view-item').forEach(function(v) { v.classList.remove('active'); });
+  document.getElementById('cv-' + id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  var navLinks = document.querySelectorAll('.portal-nav-link');
+  navLinks.forEach(function(l) { l.classList.remove('active'); });
+  navLinks[id === 'dashboard' ? 0 : 1].classList.add('active');
+}
+
+function clientApprove() {
+  clientView('confirmed');
+  var dot = document.querySelector('.notif-dot');
+  if (dot) dot.style.display = 'none';
+}
+
+function showProcessing() {
+  var overlay = document.getElementById('processing');
+  overlay.classList.add('active');
+  var steps = ['ps-1', 'ps-2', 'ps-3', 'ps-4', 'ps-5'];
+  var current = 0;
+  function advance() {
+    if (current > 0) {
+      var prev = document.getElementById(steps[current - 1]);
+      prev.classList.remove('active'); prev.classList.add('done');
+      prev.querySelector('.processing-check').innerHTML = '&#10003;';
+    }
+    if (current < steps.length) {
+      document.getElementById(steps[current]).classList.add('active');
+      current++;
+      setTimeout(advance, 700);
+    } else {
+      setTimeout(function() {
+        overlay.classList.remove('active');
+        steps.forEach(function(id) {
+          var el = document.getElementById(id);
+          el.classList.remove('active', 'done');
+          el.querySelector('.processing-check').innerHTML = '&bull;';
+        });
+        opsGoTo(2);
+      }, 500);
+    }
+  }
+  advance();
+}
+</script>
+
+<!-- ============================================
+     REACT + BABEL
+     ============================================ -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+<!-- ============================================
+     REACT APP (inlined from app.jsx)
+     ============================================ -->
+<script type="text/babel">
+// Beams 30-60-90 horizontal scene deck.
+// Five full-bleed kitchen scenes with crossfade + Ken Burns + animated text reveals.
+// Navigation: arrow keys, scroll wheel, swipe, click arrows, click dots.
+const { useEffect, useState, useRef, useCallback } = React;
+
+const SCENES = [
+  {
+    id: 'hero',
+    img: 'assets/kitchen.jpg',
+    label: 'Intro',
+    type: 'hero',
+  },
+  {
+    id: 'days-1-30',
+    img: 'assets/beam-1.jpg',
+    label: 'Days 1–30',
+    type: 'phase',
+    phaseLabel: 'Days 1–30',
+    headingParts: [{ text: 'Understand the ' }, { text: 'plumbing.', accent: true }],
+    bullets: [
+      'Shadow every stage of the delivery pipeline: from signed contract through builder assignment, materials ordering, milestone approvals, and project close. Map the real process, not the documented one.',
+      'Identify the top three operational pain points by frequency and severity. Start building the case for what to fix first.',
+      'Audit current tools and systems. Understand what data exists, where it lives, and what is being tracked versus what should be.',
+    ],
+    metrics: [
+      { value: '100%', label: 'Pipeline stages shadowed' },
+      { value: 'Top 3', label: 'Pain points identified' },
+    ],
+  },
+  {
+    id: 'days-30-60',
+    img: 'assets/beam-2.jpg',
+    label: 'Days 30–60',
+    type: 'phase',
+    phaseLabel: 'Days 30–60',
+    headingParts: [{ text: 'Set the ' }, { text: 'pattern.', accent: true }],
+    bullets: [
+      'Redesign and ship the highest-priority process fix. Not on paper: live, tested, and adopted. Get buy-in from the team and make it stick.',
+      'Take ownership of builder onboarding end to end. Streamline the pipeline from vetting through first project assignment. Become the person builders call.',
+      'Build early warning indicators for live projects: delays, milestone slippage, coordination breakdowns. Surface problems before they reach the customer.',
+      'Establish a regular operational cadence with cross-functional teams: sales handoff reviews, builder check-ins, project health reporting.',
+    ],
+    metrics: [
+      { value: '1+', label: 'Process shipped live' },
+      { value: 'Owned', label: 'Builder onboarding pipeline' },
+    ],
+  },
+  {
+    id: 'days-60-90',
+    img: 'assets/beam-3.jpg',
+    label: 'Days 60–90',
+    type: 'phase',
+    phaseLabel: 'Days 60–90',
+    headingParts: [{ text: 'Open the ' }, { text: 'drawer.', accent: true }],
+    bullets: [
+      'Processes built in month two are running smoothly and scaling. Iterate based on what the data and builder feedback are telling you.',
+      'Root-cause analysis is embedded as a discipline, not a reaction. When something breaks, the system learns. Patterns get fixed, not symptoms.',
+      'Operational reporting gives leadership a clear view of project health, builder performance, and delivery quality. Data wins.',
+    ],
+    metrics: [
+      { value: 'Scalable', label: 'Processes running' },
+      { value: 'Embedded', label: 'Root-cause discipline' },
+    ],
+  },
+  {
+    id: 'experience',
+    img: 'assets/beam-4.jpg',
+    label: 'Why me',
+    type: 'final',
+  },
+];
+
+const EXP_CARDS = [
+  {
+    org: 'The Honourable Artillery Company',
+    title: 'Assistant Operations Manager',
+    body: 'End-to-end event delivery across spaces from 40 to 2,000 capacity. Built an AI-augmented operations system from scratch using Notion and Claude that the team now uses as its default operating system.',
+  },
+  {
+    org: 'Systems Builder',
+    title: 'AI-Native Workflow Design',
+    body: 'Maintain a full Claude Code workflow for daily planning, automation, and document production. Built a structured job search pipeline with a 100-point scoring system, automated document generation, and live tracking.',
+  },
+  {
+    org: 'Family Catering Business',
+    title: 'Multi-Team Delivery Under Pressure',
+    body: 'Coordinated independent contractors, suppliers, and staff across live client events where requirements shifted hour by hour. Owned the handoffs, ran the cadence, and solved problems on the floor before they reached the client – the same operational muscle Beams needs to keep builders and projects on track.',
+  },
+];
+
+function HeroPanel({ go }) {
+  return (
+    <div className="panel">
+      <div className="reveal reveal-d1">
+        <div className="pill">
+          <span className="dot"/>
+          <span>Operations Associate &middot; Beams</span>
+        </div>
+      </div>
+      <h1 className="hero-h reveal reveal-d2">
+        Building systems<br/>that scale.
+      </h1>
+      <p className="scene-sub reveal reveal-d3">
+        A 90-day impact plan for Beams, walked through one room at a time &mdash;
+        from someone who builds operational infrastructure from scratch.
+      </p>
+      <div className="reveal reveal-d4">
+        <button className="btn-primary" onClick={() => go(1)}>
+          <span>Step inside</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PhasePanel({ scene }) {
+  return (
+    <div className="panel">
+      <div className="reveal reveal-d1">
+        <div className="phase-label">
+          <span className="dot"/>
+          <span>{scene.phaseLabel}</span>
+        </div>
+      </div>
+      <h2 className="scene-h reveal reveal-d2">
+        {scene.headingParts.map((p, i) =>
+          p.accent ? <span key={i} className="accent">{p.text}</span> : <span key={i}>{p.text}</span>
+        )}
+      </h2>
+      <ul className="bullets">
+        {scene.bullets.map((b, i) => (
+          <li key={i} className={`bullet reveal reveal-d${i+3}`}>
+            <span className="bullet-icon"/>
+            <span>{b}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="metrics reveal reveal-d7">
+        {scene.metrics.map((m, i) => (
+          <div key={i} className="metric-card">
+            <div className="metric-value">{m.value}</div>
+            <div className="metric-label">{m.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FinalPanel() {
+  return (
+    <div className="final-inner">
+      <h2 className="exp-h reveal reveal-d1">Why <span className="accent">me.</span></h2>
+      <div className="exp-grid">
+        {EXP_CARDS.map((c, i) => (
+          <div key={i} className={`exp-card reveal reveal-d${i+2}`}>
+            <div className="exp-card-org">{c.org}</div>
+            <div className="exp-card-title">{c.title}</div>
+            <div className="exp-card-body">{c.body}</div>
+          </div>
+        ))}
+      </div>
+      <div className="footer-block reveal reveal-d5">
+        <div className="footer-row">
+          <div>
+            <div className="footer-name">Romeo Lam</div>
+            <div className="footer-role">Operations Associate &middot; Beams</div>
+          </div>
+          <div className="footer-buttons">
+            <a className="btn-outline" href="mailto:romeo.lam556@gmail.com">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="3.5" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M2.5 4.5l5.5 4 5.5-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              <span>Email</span>
+            </a>
+            <a className="btn-outline" href="#" onClick={(e)=>e.preventDefault()}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M3.5 5.5h2v8h-2v-8zM4.5 2.2a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4zM7 5.5h1.9v1.1h.03c.27-.5.92-1.05 1.9-1.05 2.03 0 2.4 1.34 2.4 3.07v4.38h-2v-3.88c0-.93-.02-2.13-1.3-2.13-1.3 0-1.5 1.02-1.5 2.06v3.95H7V5.5z"/>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+            <a className="btn-outline footer-co-link" href="#" onClick={(e) => { e.preventDefault(); window.showChangeOrder(); }}>
+              <span>Change Order Prototype</span>
+            </a>
+          </div>
+        </div>
+        <div className="easter-egg">
+          &ldquo;Nothing that you ever do with all your heart is done in vain.&rdquo;
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [active, setActive] = useState(0);
+  const lockRef = useRef(false);
+  const touchY = useRef(null);
+  const touchX = useRef(null);
+
+  const goTo = useCallback((idx) => {
+    if (idx < 0 || idx >= SCENES.length) return;
+    if (lockRef.current) return;
+    lockRef.current = true;
+    setActive(idx);
+    if (history.replaceState) history.replaceState(null, '', '#' + SCENES[idx].id);
+    setTimeout(() => { lockRef.current = false; }, 750);
+  }, []);
+
+  const next = useCallback(() => goTo(active + 1), [active, goTo]);
+  const prev = useCallback(() => goTo(active - 1), [active, goTo]);
+
+  // Keyboard
+  useEffect(() => {
+    const onKey = (e) => {
+      // Do not handle keys when change order view is visible
+      if (document.getElementById('co-view').style.display !== 'none') return;
+      if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) {
+        e.preventDefault(); next();
+      } else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
+        e.preventDefault(); prev();
+      } else if (e.key === 'Home') { goTo(0); }
+        else if (e.key === 'End') { goTo(SCENES.length - 1); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [next, prev, goTo]);
+
+  // Wheel
+  useEffect(() => {
+    let lastTrigger = 0;
+    const onWheel = (e) => {
+      if (document.getElementById('co-view').style.display !== 'none') return;
+      const now = Date.now();
+      if (now - lastTrigger < 800) return;
+      const delta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      if (Math.abs(delta) < 12) return;
+      lastTrigger = now;
+      if (delta > 0) next(); else prev();
+    };
+    window.addEventListener('wheel', onWheel, { passive: true });
+    return () => window.removeEventListener('wheel', onWheel);
+  }, [next, prev]);
+
+  // Touch
+  useEffect(() => {
+    const onStart = (e) => {
+      if (document.getElementById('co-view').style.display !== 'none') return;
+      touchY.current = e.touches[0].clientY;
+      touchX.current = e.touches[0].clientX;
+    };
+    const onEnd = (e) => {
+      if (touchY.current == null) return;
+      if (document.getElementById('co-view').style.display !== 'none') { touchY.current = null; return; }
+      const dy = e.changedTouches[0].clientY - touchY.current;
+      const dx = e.changedTouches[0].clientX - touchX.current;
+      const absY = Math.abs(dy), absX = Math.abs(dx);
+      if (Math.max(absY, absX) < 50) return;
+      if (absY > absX) {
+        if (dy < 0) next(); else prev();
+      } else {
+        if (dx < 0) next(); else prev();
+      }
+      touchY.current = null;
+    };
+    window.addEventListener('touchstart', onStart, { passive: true });
+    window.addEventListener('touchend', onEnd);
+    return () => {
+      window.removeEventListener('touchstart', onStart);
+      window.removeEventListener('touchend', onEnd);
+    };
+  }, [next, prev]);
+
+  // Hash on load
+  useEffect(() => {
+    const h = window.location.hash.replace('#', '');
+    const idx = SCENES.findIndex(s => s.id === h);
+    if (idx > 0) setActive(idx);
+  }, []);
+
+  const progressPct = ((active) / (SCENES.length - 1)) * 100;
+
+  return (
+    <>
+      {/* Stage with all scenes layered */}
+      <div className="stage">
+        {SCENES.map((s, i) => (
+          <div
+            key={s.id}
+            className={`scene ${active === i ? 'active' : ''}`}
+            data-final={s.type === 'final' ? 'true' : undefined}
+          >
+            <div className="scene-img" style={{ backgroundImage: `url('${s.img}')` }}/>
+            <div className="scene-scrim"/>
+            <div className={`scene-content ${s.type === 'final' ? 'final-content' : ''}`}>
+              <div className="scene-inner">
+                {s.type === 'hero' && <HeroPanel go={goTo}/>}
+                {s.type === 'phase' && <PhasePanel scene={s}/>}
+                {s.type === 'final' && <FinalPanel/>}
+              </div>
+            </div>
+          </div>
+        ))}
+        <div className="vignette"/>
+        <div className="grain"/>
+      </div>
+
+      {/* Progress + nav */}
+      <div className="progress-rail">
+        <div className="progress-fill" style={{ width: `${progressPct}%` }}/>
+      </div>
+
+      <nav className="nav">
+        <div className="nav-brand">Romeo Lam <span className="dot">&middot;</span> Beams</div>
+        <a className="nav-link-co" href="#" onClick={(e) => { e.preventDefault(); window.showChangeOrder(); }}>Change Order System</a>
+        <div className="nav-counter">
+          <span className="now">{String(active + 1).padStart(2, '0')}</span>
+          <span> / {String(SCENES.length).padStart(2, '0')}</span>
+        </div>
+      </nav>
+
+      {/* Side dots */}
+      <div className="scene-dots" aria-hidden="false">
+        {SCENES.map((s, i) => (
+          <button
+            key={s.id}
+            className={`scene-dot ${active === i ? 'active' : ''}`}
+            onClick={() => goTo(i)}
+            aria-label={s.label}
+          >
+            <span className="scene-dot-label">{s.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Arrows */}
+      <button className="arrow prev" onClick={prev} disabled={active === 0} aria-label="Previous">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+          <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      <button className="arrow next" onClick={next} disabled={active === SCENES.length - 1} aria-label="Next">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+          <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+
+      {/* Hint */}
+      <div className="hint">
+        <div className="keys">
+          <span className="key">&larr;</span>
+          <span className="key">&rarr;</span>
+        </div>
+        <span>or scroll &middot; swipe</span>
+      </div>
+    </>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
